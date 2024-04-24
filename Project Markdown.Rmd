@@ -1,0 +1,32 @@
+---
+title: "Project"
+author: "Michael Hawkinson"
+date: "2024-04-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r}
+#Initialize merged dataframe, set column names
+Exports_2021 = data.frame(matrix(ncol = 6, nrow = 0))
+colnames(Exports_2021) = c("Trade Flow", "Reporter", "Partner Code", "Partner", "Commodity", "Trade Value (US$)")
+
+#Isolate export data from all countries
+Exports_2021 = rbind(Canada_2021[,5:10] %>% filter(`Trade Flow` == "Exports", `Partner Code` != 0)) %>% rbind(Japan_2021[,5:10] %>% filter(`Trade Flow` == "Exports", `Partner Code` != 0)) %>% rbind(Mexico_2021[,5:10] %>% filter(`Trade Flow` == "Exports", `Partner Code` != 0)) %>% rbind(UnitedStates_2021[,5:10] %>% filter(`Trade Flow` == "Exports", `Partner Code` != 0))
+
+#One-way ANOVA, trade value being the dependent variable, country (Reporter) being the independent variable
+model = aov(`Trade Value (US$)`~Reporter, data = Exports_2021)
+summary(model)
+TukeyHSD(model)
+
+#Generating the mean of each country and plotting them onto a column chart
+#Remove scientific notation from y-axis
+options(scipen=999)
+Exports_2021 %>% group_by(Reporter) %>% summarize(AvgValue = mean(`Trade Value (US$)`)) %>% ggplot(mapping = aes(x = Reporter, y = AvgValue))+geom_col(color = "black",fill=c("darkred","darkblue","orange","darkgreen"))+ggtitle("Average Export Trade Values")+xlab("Country")+ylab("Average Trade Value (USD)")
+```
+
+
